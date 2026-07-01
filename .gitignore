@@ -16,7 +16,8 @@
 
 # production
 /build
-/data/
+/data/*
+!/data/prices.json
 dump/
 plans/
 import/

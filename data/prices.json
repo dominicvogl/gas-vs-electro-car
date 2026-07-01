@@ -1,0 +1,70 @@
+{
+	"meta": {
+		"region": "DE",
+		"currency": "EUR",
+		"compiled": "2026",
+		"source_notes": "Kraftstoff-Jahresdurchschnitte (Super E10, Diesel) 2011-2026 stammen aus der ADAC-Zeitreihe 'Kraftstoffpreisentwicklung' (Stand Juni 2026, harte Quelle, Endkundenpreise inkl. Steuern/Abgaben). Haushaltsstrom aus BDEW-Strompreisanalyse (Musterhaushalt 3.500 kWh, Mittelwert Neu- und Bestandsvertraege); 2011-2021 harte, stabile BDEW-Reihe, 2022-2024 methodenabhaengig hohe Streuung (Energiekrise, Strompreisbremse), 2025-2026 aktuelle BDEW-Werte. Oeffentlicher Ladestrom ist nur als Marktbeobachtung (u.a. LichtBlick Ladesaeulencheck, Charging Radar, Statista) ab 2024 belastbar, davor null. CO2-Preis aus BEHG/nEHS-Festpreispfad und BEHV-Versteigerungskorridor 2026.",
+		"co2_note": "WICHTIG: Der nationale CO2-Aufschlag (BEHG/nEHS) ist in allen historischen Tankstellenpreisen der Jahre ab 2021 bereits vollstaendig enthalten. Der separate Block 'co2_price_trajectory' dient ausschliesslich der Fortschreibung ab 2027 (EU-ETS-2). Bei der Preis-Projektion darf der CO2-Aufschlag fuer Jahre <= 2026 NICHT erneut aufgeschlagen werden, sonst Doppelzaehlung."
+	},
+	"fuel_prices_annual": [
+		{ "year": 2011, "diesel_eur_l": 1.411, "super_e10_eur_l": 1.522, "super_plus_eur_l": null, "quality": "hart (ADAC-Jahresmittel); Super Plus in ADAC-Reihe nicht separat ausgewiesen -> null" },
+		{ "year": 2012, "diesel_eur_l": 1.478, "super_e10_eur_l": 1.589, "super_plus_eur_l": null, "quality": "hart (ADAC-Jahresmittel)" },
+		{ "year": 2013, "diesel_eur_l": 1.420, "super_e10_eur_l": 1.549, "super_plus_eur_l": null, "quality": "hart (ADAC-Jahresmittel)" },
+		{ "year": 2014, "diesel_eur_l": 1.350, "super_e10_eur_l": 1.493, "super_plus_eur_l": null, "quality": "hart (ADAC-Jahresmittel)" },
+		{ "year": 2015, "diesel_eur_l": 1.169, "super_e10_eur_l": 1.369, "super_plus_eur_l": null, "quality": "hart (ADAC-Jahresmittel)" },
+		{ "year": 2016, "diesel_eur_l": 1.078, "super_e10_eur_l": 1.281, "super_plus_eur_l": null, "quality": "hart (ADAC-Jahresmittel); Tiefpunkt der Reihe" },
+		{ "year": 2017, "diesel_eur_l": 1.161, "super_e10_eur_l": 1.347, "super_plus_eur_l": null, "quality": "hart (ADAC-Jahresmittel)" },
+		{ "year": 2018, "diesel_eur_l": 1.283, "super_e10_eur_l": 1.428, "super_plus_eur_l": null, "quality": "hart (ADAC-Jahresmittel)" },
+		{ "year": 2019, "diesel_eur_l": 1.262, "super_e10_eur_l": 1.405, "super_plus_eur_l": null, "quality": "hart (ADAC-Jahresmittel)" },
+		{ "year": 2020, "diesel_eur_l": 1.111, "super_e10_eur_l": 1.255, "super_plus_eur_l": null, "quality": "hart (ADAC-Jahresmittel); Corona-bedingtes Tief" },
+		{ "year": 2021, "diesel_eur_l": 1.385, "super_e10_eur_l": 1.522, "super_plus_eur_l": null, "quality": "hart (ADAC-Jahresmittel); ab 01.01.2021 CO2-Aufschlag (25 EUR/t) bereits enthalten" },
+		{ "year": 2022, "diesel_eur_l": 1.946, "super_e10_eur_l": 1.860, "super_plus_eur_l": null, "quality": "hart (ADAC-Jahresmittel); teuerstes Tankjahr, Ukraine-Krieg; enthaelt zeitweisen Tankrabatt Jun-Aug 2022" },
+		{ "year": 2023, "diesel_eur_l": 1.722, "super_e10_eur_l": 1.791, "super_plus_eur_l": null, "quality": "hart (ADAC-Jahresmittel)" },
+		{ "year": 2024, "diesel_eur_l": 1.649, "super_e10_eur_l": 1.739, "super_plus_eur_l": null, "quality": "hart (ADAC-Jahresmittel)" },
+		{ "year": 2025, "diesel_eur_l": 1.611, "super_e10_eur_l": 1.688, "super_plus_eur_l": null, "quality": "hart (ADAC-Jahresmittel); drittes Jahr in Folge sinkend" },
+		{ "year": 2026, "diesel_eur_l": 1.966, "super_e10_eur_l": 1.923, "super_plus_eur_l": null, "quality": "YTD Jan-Mai 2026 (ADAC-Monatsmittel gemittelt); starker Preis-Spike Mrz/Apr 2026 (Apr 2026 = teuerster Tankmonat aller Zeiten), seit 01.05.2026 Tankrabatt -> Jahreswert noch stark volatil, NICHT als Volljahr interpretieren" }
+	],
+	"electricity_prices_annual": [
+		{ "year": 2011, "household_ct_kwh": 25.2, "public_ac_ct_kwh": null, "public_dc_ct_kwh": null, "quality": "hart (BDEW, 3.500-kWh-Haushalt); oeffentliches Laden vor 2019 nicht belastbar -> null" },
+		{ "year": 2012, "household_ct_kwh": 25.7, "public_ac_ct_kwh": null, "public_dc_ct_kwh": null, "quality": "hart (BDEW)" },
+		{ "year": 2013, "household_ct_kwh": 28.5, "public_ac_ct_kwh": null, "public_dc_ct_kwh": null, "quality": "hart (BDEW)" },
+		{ "year": 2014, "household_ct_kwh": 29.1, "public_ac_ct_kwh": null, "public_dc_ct_kwh": null, "quality": "hart (BDEW)" },
+		{ "year": 2015, "household_ct_kwh": 28.7, "public_ac_ct_kwh": null, "public_dc_ct_kwh": null, "quality": "hart (BDEW)" },
+		{ "year": 2016, "household_ct_kwh": 28.8, "public_ac_ct_kwh": null, "public_dc_ct_kwh": null, "quality": "hart (BDEW)" },
+		{ "year": 2017, "household_ct_kwh": 29.2, "public_ac_ct_kwh": null, "public_dc_ct_kwh": null, "quality": "hart (BDEW)" },
+		{ "year": 2018, "household_ct_kwh": 29.4, "public_ac_ct_kwh": null, "public_dc_ct_kwh": null, "quality": "hart (BDEW)" },
+		{ "year": 2019, "household_ct_kwh": 30.5, "public_ac_ct_kwh": null, "public_dc_ct_kwh": null, "quality": "hart (BDEW); oeffentliches Laden erst ab ~2019 marktrelevant, aber keine belastbare Jahresstatistik -> null" },
+		{ "year": 2020, "household_ct_kwh": 31.9, "public_ac_ct_kwh": null, "public_dc_ct_kwh": null, "quality": "hart (BDEW); Ladestrom-Jahresmittel nicht belastbar -> null" },
+		{ "year": 2021, "household_ct_kwh": 32.6, "public_ac_ct_kwh": null, "public_dc_ct_kwh": null, "quality": "hart (BDEW); Ladestrom-Jahresmittel nicht belastbar -> null" },
+		{ "year": 2022, "household_ct_kwh": 37.3, "public_ac_ct_kwh": null, "public_dc_ct_kwh": null, "quality": "BDEW-Mittel, aber Energiekrise -> hohe methodische Streuung (Neuvertraege deutlich teurer); Ladestrom noch nicht als Jahresmittel belastbar" },
+		{ "year": 2023, "household_ct_kwh": 45.7, "public_ac_ct_kwh": null, "public_dc_ct_kwh": null, "quality": "BDEW-Hoechststand; durch Strompreisbremse (bis Dez 2023) real teils gedeckelt -> Streuung; Ladestrom noch duenn" },
+		{ "year": 2024, "household_ct_kwh": 41.5, "public_ac_ct_kwh": 57, "public_dc_ct_kwh": 66, "quality": "Haushalt: geschaetzt aus BDEW-Reihe (~41-42, methodenabhaengig). Ladestrom: Marktbeobachtung/geschaetztes Jahresmittel, keine amtliche Statistik" },
+		{ "year": 2025, "household_ct_kwh": 39.3, "public_ac_ct_kwh": 55, "public_dc_ct_kwh": 63, "quality": "Haushalt: hart (BDEW, Mix Neu-/Bestandsvertrag). Ladestrom: Marktbeobachtung (Charging Radar/LichtBlick), Jahresmittel geschaetzt, Spanne AC ~49-70, DC ~55-75" },
+		{ "year": 2026, "household_ct_kwh": 37.2, "public_ac_ct_kwh": 55, "public_dc_ct_kwh": 63, "quality": "Haushalt: YTD (BDEW-Strompreisanalyse, Musterhaushalt 3.500 kWh). Ladestrom: YTD-Marktbeobachtung, geschaetzt" }
+	],
+	"co2_price_trajectory": [
+		{ "year": 2021, "eur_per_tonne": 25, "diesel_surcharge_ct_l": 8.0, "petrol_surcharge_ct_l": 7.0, "note": "BEHG-Festpreisstart. Aufschlag inkl. 19% MwSt., Faustformel Diesel 0,32 ct/L, Benzin 0,28 ct/L je EUR/t (basiert auf 2,65 kg CO2/L Diesel bzw. 2,37 kg/L Benzin). Bereits in Tankpreisen enthalten." },
+		{ "year": 2022, "eur_per_tonne": 30, "diesel_surcharge_ct_l": 9.6, "petrol_surcharge_ct_l": 8.4, "note": "BEHG-Festpreis. Bereits in Tankpreisen enthalten." },
+		{ "year": 2023, "eur_per_tonne": 30, "diesel_surcharge_ct_l": 9.6, "petrol_surcharge_ct_l": 8.4, "note": "Anstieg auf 35 EUR/t wegen Energiekrise um ein Jahr verschoben -> 2023 bei 30 EUR/t eingefroren. Bereits in Tankpreisen enthalten." },
+		{ "year": 2024, "eur_per_tonne": 45, "diesel_surcharge_ct_l": 14.4, "petrol_surcharge_ct_l": 12.6, "note": "BEHG-Festpreis (von 40 auf 45 EUR/t angehoben, Haushalt 2024). Bereits in Tankpreisen enthalten." },
+		{ "year": 2025, "eur_per_tonne": 55, "diesel_surcharge_ct_l": 17.6, "petrol_surcharge_ct_l": 15.4, "note": "Letztes Jahr der BEHG-Festpreisphase. Bereits in Tankpreisen enthalten." },
+		{ "year": 2026, "eur_per_tonne": 60, "diesel_surcharge_ct_l": 19.2, "petrol_surcharge_ct_l": 16.8, "note": "Erste Versteigerungsphase nEHS mit gesetzlichem Preiskorridor 55-65 EUR/t (BEHV); hier Mittel 60 EUR/t. Bei 55 EUR/t: Diesel 17,6 / Benzin 15,4 ct/L; bei 65 EUR/t: Diesel 20,8 / Benzin 18,2 ct/L. Bereits in Tankpreisen enthalten." },
+		{ "year": 2027, "eur_per_tonne": 85, "diesel_surcharge_ct_l": 27.2, "petrol_surcharge_ct_l": 23.8, "note": "AUSBLICK EU-ETS-2 (marktbasiert, kein Festpreis). Prognosekorridor ca. 55-110 EUR/t; hier Punktschaetzung 85 EUR/t. Ab hier NEU auf die fortgeschriebenen Nettopreise aufzuschlagen (in Preisen <=2026 noch nicht enthalten). Best Case ~55 EUR/t (Diesel +17,6 / Benzin +15,4 ct/L), Worst Case ~110 EUR/t (Diesel +35,2 / Benzin +30,8 ct/L)." }
+	],
+	"projection_hints": {
+		"diesel_cagr_pct": 0.95,
+		"super_e10_cagr_pct": 0.74,
+		"electricity_cagr_pct": 3.23,
+		"best_case_note": "Best Case (guenstig fuer Verbraucher): CAGR am unteren Rand bzw. leicht negativ. Diesel/Benzin ~0 bis -1%/Jahr durch sinkende Rohoelnachfrage (E-Mobilitaets-Hochlauf), effiziente Flotten und Wettbewerb. Haushaltsstrom ~+1-1,5%/Jahr, da Netzentgelt-Zuschuss, Ausbau Erneuerbarer und sinkende Beschaffungskosten den Strompreis daempfen. Ladestrom naehert sich Haushaltsstrom an (mehr Wettbewerb, Ad-hoc-Regulierung).",
+		"worst_case_note": "Worst Case (teuer): CAGR am oberen Rand plus EU-ETS-2-Schub ab 2027. Diesel/Benzin ~+3-5%/Jahr durch stark steigenden CO2-Preis (ETS-2 ggf. 100+ EUR/t), Angebotsverknappung und Geopolitik. Haushaltsstrom ~+4-5%/Jahr durch weiter steigende Netzentgelte (Netzausbau) und auslaufende Entlastungen.",
+		"methodology": "CAGR = (Endwert/Startwert)^(1/n)-1 ueber 2011-2025 (n=14 Jahre), bewusst OHNE das volatile 2026-YTD (Preis-Spike Mrz/Apr 2026 verzerrt). Werte: Diesel 1,411->1,611 EUR/L; Super E10 1,522->1,688 EUR/L; Haushaltsstrom 25,2->39,3 ct/kWh. Zur Einordnung inkl. 2026-YTD (2011-2026, n=15) laege der Diesel-CAGR bei ~2,2% und Benzin bei ~1,6% - dieser Wert ist durch den Spike nach oben verzerrt. Best-/Worst-Korridor als CAGR +/- Streuung plus separater EU-ETS-2-Aufschlag ab 2027."
+	},
+	"sources": [
+		{ "name": "ADAC - Kraftstoffpreisentwicklung (Benzin- und Dieselpreise seit 1950)", "year": "2026", "used_for": "Diesel- und Super-E10-Jahresdurchschnitte 2011-2026, Monatswerte 2026 YTD" },
+		{ "name": "BDEW-Strompreisanalyse", "year": "2026", "used_for": "Haushaltsstrom-Jahresdurchschnitte (3.500-kWh-Haushalt), 2025 (39,3 ct) und 2026 YTD (37,2 ct)" },
+		{ "name": "ADAC - Strompreis Zusammensetzung/Europa-Vergleich", "year": "2026", "used_for": "Bestaetigung Haushaltsstrom 2025/2026, Strompreis-Zusammensetzung" },
+		{ "name": "DEHSt / BEHG / BEHV (nationaler Emissionshandel)", "year": "2026", "used_for": "CO2-Festpreispfad 2021-2025 und Versteigerungskorridor 2026 (55-65 EUR/t)" },
+		{ "name": "IHK / BDEW - Hinweise nationaler Emissionshandel", "year": "2026", "used_for": "CO2-Preisstufen, Aufschlag ct/L Diesel/Benzin, Ausblick EU-ETS-2 ab 2027" },
+		{ "name": "LichtBlick Ladesaeulencheck / Charging Radar (ecomento) / Statista", "year": "2025", "used_for": "Oeffentliche Ladepreise AC/DC 2024-2026 (Marktbeobachtung, geschaetzte Jahresmittel)" }
+	]
+}

@@ -1,65 +1,100 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import type { AppState } from "@/lib/types";
+import { calculate } from "@/lib/engine";
+import { priceData } from "@/lib/prices";
+import { buildDefaultState } from "@/lib/defaults";
+import { clearState, loadState, saveState } from "@/lib/storage";
+import { DieselPanel, ElectricPanel } from "@/components/InputPanel";
+import { ForecastControls } from "@/components/ForecastControls";
+import { CostChart } from "@/components/CostChart";
+import { ResultCards } from "@/components/ResultCards";
 
 export default function Home() {
+  const [state, setState] = useState<AppState>(() => buildDefaultState());
+  const [loaded, setLoaded] = useState(false);
+
+  // Gespeichertes Szenario einmalig nach dem Mounten laden. Bewusst im Effect:
+  // localStorage darf beim SSR/ersten Render nicht gelesen werden (Hydration-Mismatch),
+  // deshalb hier die stricte Heuristik-Regel gezielt deaktiviert.
+  useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
+    setState(loadState());
+    setLoaded(true);
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, []);
+
+  // Änderungen persistieren – erst nachdem der gespeicherte Stand geladen wurde.
+  useEffect(() => {
+    if (loaded) saveState(state);
+  }, [state, loaded]);
+
+  const result = useMemo(() => calculate(state, priceData), [state]);
+
+  const handleReset = () => {
+    clearState();
+    setState(buildDefaultState());
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
+      <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="font-mono text-xs uppercase tracking-widest text-ink-soft">
+            TCO-Prüfstand · Deutschland 2026
+          </p>
+          <h1 className="mt-1 font-display text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
+            Diesel behalten <span className="text-ink-soft">vs.</span>{" "}
+            E-Auto neu
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="mt-2 max-w-2xl text-sm text-ink-soft">
+            Bestehenden Diesel weiterfahren oder verkaufen und elektrisch
+            neu kaufen? Der Diesel startet bei 0 €, der Verkaufserlös senkt die
+            E-Startkurve. Alle Werte sind editierbar und bleiben lokal gespeichert.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+        <button
+          type="button"
+          onClick={handleReset}
+          className="rounded-md border border-hairline bg-panel-raised px-3 py-2 text-sm text-ink transition-colors hover:bg-panel"
+        >
+          Zurücksetzen
+        </button>
+      </header>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <DieselPanel
+          value={state.diesel}
+          onChange={(diesel) => setState((s) => ({ ...s, diesel }))}
+        />
+        <ElectricPanel
+          value={state.ev}
+          onChange={(ev) => setState((s) => ({ ...s, ev }))}
+        />
+      </div>
+
+      <div className="mt-4">
+        <ForecastControls
+          value={state.forecast}
+          onChange={(forecast) => setState((s) => ({ ...s, forecast }))}
+        />
+      </div>
+
+      <div className="mt-4">
+        <CostChart result={result} />
+      </div>
+
+      <div className="mt-4">
+        <ResultCards result={result} horizonYears={state.forecast.horizonYears} />
+      </div>
+
+      <footer className="mt-8 border-t border-hairline pt-4 text-xs text-ink-soft">
+        Modell-Variante A (Umstiegs-Betrachtung). Preisbasis:{" "}
+        {priceData.meta.source_notes ? "ADAC / BDEW / BEHG" : "prices.json"}. Ohne
+        Zinsen auf gebundenes Kapital und ohne Inflationsbereinigung. Keine
+        Steuerberatung – Orientierungswerte für die eigene Entscheidung.
+      </footer>
+    </main>
   );
 }
