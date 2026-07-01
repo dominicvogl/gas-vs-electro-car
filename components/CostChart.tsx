@@ -39,7 +39,7 @@ const C = {
   hairline: "#d9d7d1",
 };
 
-const MAIN_LABELS = ["Diesel", "E-Auto"];
+const EV_LABEL = "E-Auto";
 
 // prefers-reduced-motion als externer Store – vermeidet setState-in-Effect.
 function useReducedMotion(): boolean {
@@ -54,26 +54,43 @@ function useReducedMotion(): boolean {
   );
 }
 
-export function CostChart({ result }: { result: CalcResult }) {
+export function CostChart({
+  result,
+  combustionLabel,
+}: {
+  result: CalcResult;
+  combustionLabel: string;
+}) {
   const reducedMotion = useReducedMotion();
   const chartRef = useRef(null);
 
   const data: ChartData<"line"> = useMemo(() => {
-    const pt = (year: number, value: number) => ({ x: year, y: value });
     const years = result.years;
+    const start = result.startInvestment;
+    // Startpunkt t = 0: Diesel = 0, E = Netto-Umstiegsinvestition. Macht den
+    // Anfangs-Vorsprung/-Rückstand und Break-evens im ersten Jahr sichtbar.
+    const dieselSeries = (pick: (y: (typeof years)[number]) => number) => [
+      { x: 0, y: 0 },
+      ...years.map((y) => ({ x: y.year, y: pick(y) })),
+    ];
+    const evSeries = (pick: (y: (typeof years)[number]) => number) => [
+      { x: 0, y: start },
+      ...years.map((y) => ({ x: y.year, y: pick(y) })),
+    ];
+
     return {
       datasets: [
         // Diesel-Band (Best = untere Grenze, Worst = obere Grenze, gefüllt)
         {
           label: "_dieselBest",
-          data: years.map((y) => pt(y.year, y.dieselBest)),
+          data: dieselSeries((y) => y.dieselBest),
           borderWidth: 0,
           pointRadius: 0,
           fill: false,
         },
         {
           label: "_dieselWorst",
-          data: years.map((y) => pt(y.year, y.dieselWorst)),
+          data: dieselSeries((y) => y.dieselWorst),
           borderWidth: 0,
           pointRadius: 0,
           backgroundColor: C.dieselBand,
@@ -82,14 +99,14 @@ export function CostChart({ result }: { result: CalcResult }) {
         // E-Band
         {
           label: "_evBest",
-          data: years.map((y) => pt(y.year, y.evBest)),
+          data: evSeries((y) => y.evBest),
           borderWidth: 0,
           pointRadius: 0,
           fill: false,
         },
         {
           label: "_evWorst",
-          data: years.map((y) => pt(y.year, y.evWorst)),
+          data: evSeries((y) => y.evWorst),
           borderWidth: 0,
           pointRadius: 0,
           backgroundColor: C.evBand,
@@ -97,8 +114,8 @@ export function CostChart({ result }: { result: CalcResult }) {
         },
         // Hauptlinien
         {
-          label: "Diesel",
-          data: years.map((y) => pt(y.year, y.dieselCumulative)),
+          label: combustionLabel,
+          data: dieselSeries((y) => y.dieselCumulative),
           borderColor: C.diesel,
           backgroundColor: C.diesel,
           borderWidth: 2.5,
@@ -108,8 +125,8 @@ export function CostChart({ result }: { result: CalcResult }) {
           fill: false,
         },
         {
-          label: "E-Auto",
-          data: years.map((y) => pt(y.year, y.evCumulative)),
+          label: EV_LABEL,
+          data: evSeries((y) => y.evCumulative),
           borderColor: C.ev,
           backgroundColor: C.ev,
           borderWidth: 2.5,
@@ -120,11 +137,12 @@ export function CostChart({ result }: { result: CalcResult }) {
         },
       ],
     };
-  }, [result]);
+  }, [result, combustionLabel]);
 
   const options: ChartOptions<"line"> = useMemo(() => {
     const be = result.breakEvenYearExact;
     const beKm = result.breakEvenKm;
+    const mainLabels = [combustionLabel, EV_LABEL];
 
     return {
       responsive: true,
@@ -134,7 +152,7 @@ export function CostChart({ result }: { result: CalcResult }) {
       scales: {
         x: {
           type: "linear",
-          min: 1,
+          min: 0,
           max: result.years.length,
           title: { display: true, text: "Jahr", color: C.soft },
           ticks: {
@@ -157,13 +175,13 @@ export function CostChart({ result }: { result: CalcResult }) {
         legend: {
           labels: {
             color: C.ink,
-            filter: (item) => MAIN_LABELS.includes(item.text),
+            filter: (item) => mainLabels.includes(item.text),
             usePointStyle: true,
             boxWidth: 8,
           },
         },
         tooltip: {
-          filter: (item) => MAIN_LABELS.includes(item.dataset.label ?? ""),
+          filter: (item) => mainLabels.includes(item.dataset.label ?? ""),
           backgroundColor: "#ffffff",
           borderColor: C.hairline,
           borderWidth: 1,
@@ -173,15 +191,20 @@ export function CostChart({ result }: { result: CalcResult }) {
           callbacks: {
             title: (items) => {
               const year = items[0]?.parsed.x;
-              return `Jahr ${year}`;
+              return year === 0 ? "Start (heute)" : `Jahr ${year}`;
             },
             label: (ctx) =>
               `${ctx.dataset.label}: ${formatEuro(Number(ctx.parsed.y))}`,
             afterBody: (items) => {
               const yr = items[0]?.parsed.x;
-              const row = result.years.find((y) => y.year === yr);
-              if (!row) return "";
-              const diff = row.dieselCumulative - row.evCumulative;
+              const diff =
+                yr === 0
+                  ? 0 - result.startInvestment
+                  : (() => {
+                      const row = result.years.find((y) => y.year === yr);
+                      return row ? row.dieselCumulative - row.evCumulative : NaN;
+                    })();
+              if (Number.isNaN(diff)) return "";
               const sign = diff >= 0 ? "E-Auto günstiger" : "Diesel günstiger";
               return `Δ ${formatEuro(Math.abs(diff))} · ${sign}`;
             },
@@ -189,7 +212,7 @@ export function CostChart({ result }: { result: CalcResult }) {
         },
         annotation: {
           annotations:
-            be !== null
+            be !== null && be > 0
               ? {
                   breakEven: {
                     type: "line" as const,
@@ -220,7 +243,7 @@ export function CostChart({ result }: { result: CalcResult }) {
         },
       },
     };
-  }, [result, reducedMotion]);
+  }, [result, reducedMotion, combustionLabel]);
 
   return (
     <div className="rounded-lg border border-hairline bg-panel-raised p-5">
@@ -235,9 +258,14 @@ export function CostChart({ result }: { result: CalcResult }) {
       </div>
       {result.breakEvenYearExact === null ? (
         <p className="mt-3 text-xs text-ink-soft">
-          Kein Break-even innerhalb des Betrachtungszeitraums – das E-Auto bleibt
-          in den kumulierten Kosten über dem Diesel. Band = Best-/Worst-Case aus
-          der Preisprognose (CAGR ± Band).
+          Kein nachhaltiger Break-even – das E-Auto liegt am Ende des Zeitraums
+          über dem Diesel. Bänder = Best-/Worst-Case aus der Preisprognose
+          (CAGR ± Band).
+        </p>
+      ) : result.breakEvenYearExact <= 0 ? (
+        <p className="mt-3 text-xs text-ink-soft">
+          Das E-Auto ist von Beginn an günstiger (Diesel-Verkaufserlös deckt den
+          Umstieg). Bänder = Best-/Worst-Case aus der Preisprognose (CAGR ± Band).
         </p>
       ) : (
         <p className="mt-3 text-xs text-ink-soft">

@@ -32,11 +32,15 @@ export function buildDefaultState(): AppState {
     ev: {
       purchasePrice: 42000,
       purchaseSubsidy: 0,
-      useFinancing: false,
+      acquisitionMode: "cash",
       financing: {
         monthlyRate: 450,
         termMonths: 48,
         downPayment: 5000,
+      },
+      leasing: {
+        monthlyRate: 399,
+        downPayment: 0,
       },
       consumptionPer100km: 17,
       charging: {

@@ -33,9 +33,11 @@ function Card({
 export function ResultCards({
   result,
   horizonYears,
+  combustionLabel,
 }: {
   result: CalcResult;
   horizonYears: number;
+  combustionLabel: string;
 }) {
   const { breakEvenYearExact, breakEvenKm, dieselCostPerKm, evCostPerKm, totalSavings } =
     result;
@@ -45,7 +47,17 @@ export function ResultCards({
     <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
       {/* Held: der Break-even-Punkt */}
       <Card label="Break-even" accent="breakeven">
-        {breakEvenYearExact !== null ? (
+        {breakEvenYearExact !== null && breakEvenYearExact <= 0 ? (
+          <div>
+            <div className="font-display text-3xl font-semibold text-ink">
+              Sofort
+            </div>
+            <p className="mt-2 text-xs leading-snug text-ink-soft">
+              Das E-Auto ist von Beginn an günstiger – der Diesel-Verkaufserlös
+              deckt den Umstieg.
+            </p>
+          </div>
+        ) : breakEvenYearExact !== null ? (
           <div>
             <div className="tnum font-display text-3xl font-semibold text-ink">
               {formatYears(breakEvenYearExact)}
@@ -72,7 +84,7 @@ export function ResultCards({
 
       <Card label="Kosten je Kilometer">
         <div className="flex items-baseline justify-between">
-          <span className="text-xs text-diesel">Diesel</span>
+          <span className="text-xs text-diesel">{combustionLabel}</span>
           <span className="tnum font-mono text-xl font-semibold text-ink">
             {formatEuroPerKm(dieselCostPerKm)}
           </span>
@@ -99,8 +111,8 @@ export function ResultCards({
         </div>
         <p className="mt-2 text-xs leading-snug text-ink-soft">
           {evWins
-            ? `Vorteil des E-Autos gegenüber dem weitergefahrenen Diesel nach ${horizonYears} Jahren.`
-            : `Mehrkosten des E-Autos gegenüber dem Diesel nach ${horizonYears} Jahren.`}
+            ? `Vorteil des E-Autos gegenüber dem weitergefahrenen ${combustionLabel} nach ${horizonYears} Jahren.`
+            : `Mehrkosten des E-Autos gegenüber dem ${combustionLabel} nach ${horizonYears} Jahren.`}
         </p>
       </Card>
     </div>

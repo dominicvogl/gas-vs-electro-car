@@ -1,15 +1,33 @@
 "use client";
 
-import type { CombustionVehicle, ElectricVehicle, FuelType } from "@/lib/types";
-import { NumberField, Panel, SelectField, SliderField, ToggleField } from "./fields";
+import type {
+  AcquisitionMode,
+  CombustionVehicle,
+  ElectricVehicle,
+  FuelType,
+} from "@/lib/types";
+import { fuelConsumptionUnit, fuelLabel } from "@/lib/labels";
+import {
+  NumberField,
+  Panel,
+  SegmentedControl,
+  SelectField,
+  SliderField,
+} from "./fields";
+
+const ACQUISITION_OPTIONS: Array<{ value: AcquisitionMode; label: string }> = [
+  { value: "cash", label: "Barkauf" },
+  { value: "financing", label: "Finanzierung" },
+  { value: "leasing", label: "Leasing" },
+];
 
 const FUEL_OPTIONS: Array<{ value: FuelType; label: string }> = [
   { value: "diesel", label: "Diesel" },
-  { value: "super_e10", label: "Super E10" },
-  { value: "super_plus", label: "Super Plus" },
+  { value: "super_e10", label: "Super E10 (Benzin)" },
+  { value: "super_plus", label: "Super Plus (Benzin)" },
 ];
 
-export function DieselPanel({
+export function CombustionPanel({
   value,
   onChange,
 }: {
@@ -20,9 +38,25 @@ export function DieselPanel({
   const setRun = (patch: Partial<CombustionVehicle["running"]>) =>
     onChange({ ...value, running: { ...value.running, ...patch } });
 
+  const label = fuelLabel(value.fuelType);
+
   return (
-    <Panel title="Diesel (Bestand)" accent="diesel">
+    <Panel
+      title="Bestandsfahrzeug"
+      accent="diesel"
+      badge={
+        <span className="rounded-full border border-diesel/40 bg-diesel-soft px-2.5 py-0.5 font-mono text-[11px] font-medium text-diesel">
+          {label}
+        </span>
+      }
+    >
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <SelectField
+          label="Kraftstoffart"
+          value={value.fuelType}
+          onChange={(v) => set({ fuelType: v })}
+          options={FUEL_OPTIONS}
+        />
         <NumberField
           label="Restwert / Verkaufserlös"
           value={value.currentValue}
@@ -32,17 +66,11 @@ export function DieselPanel({
           min={0}
           hint="Senkt beim Umstieg die E-Startkurve."
         />
-        <SelectField
-          label="Kraftstoffart"
-          value={value.fuelType}
-          onChange={(v) => set({ fuelType: v })}
-          options={FUEL_OPTIONS}
-        />
         <NumberField
-          label="Verbrauch"
+          label={`Verbrauch (${label})`}
           value={value.consumptionPer100km}
           onChange={(v) => set({ consumptionPer100km: v })}
-          unit="L/100km"
+          unit={fuelConsumptionUnit(value.fuelType)}
           step={0.1}
           min={0}
         />
@@ -98,6 +126,11 @@ export function ElectricPanel({
     onChange({ ...value, charging: { ...value.charging, ...patch } });
   const setFin = (patch: Partial<ElectricVehicle["financing"]>) =>
     onChange({ ...value, financing: { ...value.financing, ...patch } });
+  const setLease = (patch: Partial<ElectricVehicle["leasing"]>) =>
+    onChange({ ...value, leasing: { ...value.leasing, ...patch } });
+
+  const mode = value.acquisitionMode;
+  const isLeasing = mode === "leasing";
 
   return (
     <Panel title="E-Auto (neu)" accent="ev">
@@ -109,6 +142,12 @@ export function ElectricPanel({
           unit="€"
           step={500}
           min={0}
+          disabled={mode !== "cash"}
+          hint={
+            mode === "cash"
+              ? undefined
+              : "Nur bei Barkauf – Finanzierung/Leasing rechnen über die Rate."
+          }
         />
         <NumberField
           label="Kaufprämie"
@@ -122,17 +161,21 @@ export function ElectricPanel({
       </div>
 
       <div className="mt-4 border-t border-hairline pt-4">
-        <ToggleField
-          label="Finanzierung statt Barkauf"
-          checked={value.useFinancing}
-          onChange={(v) => set({ useFinancing: v })}
-          hint={
-            value.useFinancing
-              ? "Nur Anzahlung fließt in den Start, Raten laufen als Kosten."
-              : "Kaufpreis fließt komplett in die Umstiegsinvestition."
-          }
+        <SegmentedControl
+          label="Erwerbsart"
+          value={mode}
+          onChange={(m) => set({ acquisitionMode: m })}
+          options={ACQUISITION_OPTIONS}
         />
-        {value.useFinancing ? (
+
+        {mode === "cash" ? (
+          <p className="mt-3 text-[11px] leading-tight text-ink-soft">
+            Kaufpreis fließt komplett in die Umstiegsinvestition (abzüglich
+            Prämie und Diesel-Verkaufserlös).
+          </p>
+        ) : null}
+
+        {mode === "financing" ? (
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
             <NumberField
               label="Anzahlung"
@@ -158,6 +201,34 @@ export function ElectricPanel({
               step={6}
               min={0}
             />
+          </div>
+        ) : null}
+
+        {mode === "leasing" ? (
+          <div className="mt-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <NumberField
+                label="Sonderzahlung / Anzahlung"
+                value={value.leasing.downPayment}
+                onChange={(v) => setLease({ downPayment: v })}
+                unit="€"
+                step={500}
+                min={0}
+              />
+              <NumberField
+                label="Monatsrate"
+                value={value.leasing.monthlyRate}
+                onChange={(v) => setLease({ monthlyRate: v })}
+                unit="€/M"
+                step={10}
+                min={0}
+              />
+            </div>
+            <p className="mt-3 text-[11px] leading-tight text-ink-soft">
+              Rate läuft über die gesamte Betrachtungsdauer (Annahme: fortlaufendes
+              Leasing). Kein Kaufpreis und kein Restwert – das Auto wird
+              zurückgegeben.
+            </p>
           </div>
         ) : null}
       </div>
@@ -250,6 +321,8 @@ export function ElectricPanel({
           unit="€"
           step={500}
           min={0}
+          disabled={isLeasing}
+          hint={isLeasing ? "Bei Leasing ohne Wirkung (Rückgabe)." : undefined}
         />
       </div>
     </Panel>

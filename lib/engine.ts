@@ -16,12 +16,35 @@ function financingMonthsInYear(termMonths: number, j: number): number {
 }
 
 // Netto-Umstiegsinvestition, die den E-Pfad zum Start belastet.
+// Verkaufserlös des Diesels und Kaufprämie senken den Start in allen Erwerbsarten.
 function evStartInvestment(state: AppState): number {
   const { ev, diesel } = state;
-  if (ev.useFinancing) {
-    return ev.financing.downPayment - ev.purchaseSubsidy - diesel.currentValue;
+  const credits = ev.purchaseSubsidy + diesel.currentValue;
+  switch (ev.acquisitionMode) {
+    case "financing":
+      return ev.financing.downPayment - credits;
+    case "leasing":
+      return ev.leasing.downPayment - credits;
+    case "cash":
+    default:
+      return ev.purchasePrice - credits;
   }
-  return ev.purchasePrice - ev.purchaseSubsidy - diesel.currentValue;
+}
+
+// Erwerbs-abhängige Monatskosten in Jahr j (1-indexiert).
+// Finanzierung: Raten bis Laufzeitende. Leasing: Rate über die gesamte Betrachtungsdauer.
+function evMonthlyCostInYear(state: AppState, j: number): number {
+  const { ev } = state;
+  if (ev.acquisitionMode === "financing") {
+    return (
+      financingMonthsInYear(ev.financing.termMonths, j) *
+      ev.financing.monthlyRate
+    );
+  }
+  if (ev.acquisitionMode === "leasing") {
+    return 12 * ev.leasing.monthlyRate;
+  }
+  return 0;
 }
 
 // Kumulierte Diesel-Gesamtkosten je Jahr (1..horizon) für einen gegebenen Kraftstoff-CAGR.
@@ -95,10 +118,7 @@ function evCumulativeSeries(
     // Kfz-Steuer erst nach Ablauf der Befreiung (Kalenderjahr).
     const tax = calendarYear <= ev.taxFreeUntilYear ? 0 : ev.running.tax;
 
-    const financing = ev.useFinancing
-      ? financingMonthsInYear(ev.financing.termMonths, j) *
-        ev.financing.monthlyRate
-      : 0;
+    const monthly = evMonthlyCostInYear(state, j);
 
     const running =
       energy +
@@ -106,11 +126,13 @@ function evCumulativeSeries(
       tax +
       ev.running.maintenance -
       ev.thgPerYear +
-      financing;
+      monthly;
 
     cumulative += running;
 
-    if (j === forecast.horizonYears && ev.endResidualValue) {
+    // Restwert nur, wenn das Auto am Ende dem Halter gehört (nicht bei Leasing).
+    const ownsCar = ev.acquisitionMode !== "leasing";
+    if (j === forecast.horizonYears && ownsCar && ev.endResidualValue) {
       cumulative -= ev.endResidualValue;
     }
     series.push(cumulative);
@@ -137,28 +159,11 @@ export function calculate(state: AppState, data: PriceData): CalcResult {
   const evBest = evCumulativeSeries(state, data, elecCagr - band);
 
   const years: YearlyResult[] = [];
-  let breakEvenYear: number | null = null;
-  let breakEvenYearExact: number | null = null;
-
-  // f(t) = dieselCumulative - evCumulative; Break-even ist die Nullstelle (E holt auf).
-  // Basispunkt (Jahr 0): Diesel = 0, E = Netto-Umstiegsinvestition.
-  let prevGap = -evStartInvestment(state);
-
   for (let i = 0; i < horizon; i++) {
-    const year = i + 1;
-    const gap = dieselBase[i] - evBase[i];
-    if (breakEvenYear === null && gap >= 0) {
-      breakEvenYear = year;
-      // lineare Interpolation zwischen Jahr i (prevGap) und Jahr i+1 (gap)
-      const denom = gap - prevGap;
-      const frac = denom !== 0 ? (0 - prevGap) / denom : 0;
-      breakEvenYearExact = i + Math.min(1, Math.max(0, frac));
-    }
-    prevGap = gap;
     years.push({
-      year,
+      year: i + 1,
       calendarYear: state.startYear + i,
-      cumulativeKm: year * forecast.annualKm,
+      cumulativeKm: (i + 1) * forecast.annualKm,
       dieselCumulative: dieselBase[i],
       evCumulative: evBase[i],
       dieselBest: dieselBest[i],
@@ -170,9 +175,44 @@ export function calculate(state: AppState, data: PriceData): CalcResult {
 
   const totalKm = forecast.annualKm * horizon;
   const lastIdx = horizon - 1;
+  const startInvestment = evStartInvestment(state);
+  const totalSavings = dieselBase[lastIdx] - evBase[lastIdx];
+
+  // gap(t) = dieselCumulative - evCumulative über die Zeitachse t = 0..horizon.
+  // t = 0 ist der Startpunkt: Diesel = 0, E = Netto-Umstiegsinvestition.
+  const gap = (t: number): number =>
+    t === 0 ? -startInvestment : dieselBase[t - 1] - evBase[t - 1];
+
+  // Nachhaltiger Break-even: nur wenn das E-Auto am Horizont vorn liegt
+  // (totalSavings >= 0). Sonst holt es entweder nie auf oder fällt (z. B. bei
+  // Leasing) wieder zurück – dann kein echter Umstiegsvorteil.
+  let breakEvenYear: number | null = null;
+  let breakEvenYearExact: number | null = null;
+
+  if (totalSavings >= 0) {
+    // Letzter Zeitpunkt, an dem das E-Auto noch hinten liegt (gap < 0).
+    let lastBehind = -1;
+    for (let t = 0; t <= horizon; t++) {
+      if (gap(t) < 0) lastBehind = t;
+    }
+    if (lastBehind < 0) {
+      // E-Auto von Beginn an günstiger.
+      breakEvenYearExact = 0;
+      breakEvenYear = 0;
+    } else {
+      // Nullstelle zwischen lastBehind und lastBehind + 1 interpolieren.
+      const g0 = gap(lastBehind);
+      const g1 = gap(lastBehind + 1);
+      const denom = g1 - g0;
+      const frac = denom !== 0 ? (0 - g0) / denom : 0;
+      breakEvenYearExact = lastBehind + Math.min(1, Math.max(0, frac));
+      breakEvenYear = Math.ceil(breakEvenYearExact);
+    }
+  }
 
   return {
     years,
+    startInvestment,
     breakEvenYear,
     breakEvenYearExact,
     breakEvenKm:
@@ -181,7 +221,7 @@ export function calculate(state: AppState, data: PriceData): CalcResult {
         : Math.round(breakEvenYearExact * forecast.annualKm),
     dieselCostPerKm: totalKm > 0 ? dieselBase[lastIdx] / totalKm : 0,
     evCostPerKm: totalKm > 0 ? evBase[lastIdx] / totalKm : 0,
-    totalSavings: dieselBase[lastIdx] - evBase[lastIdx],
+    totalSavings,
   };
 }
 

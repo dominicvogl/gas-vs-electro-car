@@ -3,6 +3,10 @@
 import type { ForecastSettings } from "@/lib/types";
 import { NumberField, Panel, ToggleField } from "./fields";
 
+// Erklärung der durchschnittlichen jährlichen Wachstumsrate (für Info-Tooltips).
+const CAGR_EXPLANATION =
+  "CAGR (Compound Annual Growth Rate) = durchschnittliche jährliche Wachstumsrate. Sie gibt an, um wie viel Prozent ein Preis im Mittel pro Jahr steigt, zinseszinsartig fortgeschrieben: Preis × (1 + CAGR)^Jahre. Beispiel: 3 %/Jahr lassen den Preis in ~24 Jahren auf das Doppelte steigen.";
+
 export function ForecastControls({
   value,
   onChange,
@@ -38,7 +42,8 @@ export function ForecastControls({
           onChange={(v) => set({ fuelCagrPct: v })}
           unit="%/a"
           step={0.25}
-          hint="Vorbelegt aus der ADAC-Historie."
+          hint="Vorbelegt aus der ADAC-Historie 2011–2025."
+          info={`${CAGR_EXPLANATION} Dieser Wert schreibt den Kraftstoffpreis pro Jahr fort; vorbelegt aus der historischen ADAC-Preisentwicklung.`}
         />
         <NumberField
           label="CAGR Strom"
@@ -46,7 +51,8 @@ export function ForecastControls({
           onChange={(v) => set({ electricityCagrPct: v })}
           unit="%/a"
           step={0.25}
-          hint="Vorbelegt aus der BDEW-Historie."
+          hint="Vorbelegt aus der BDEW-Historie 2011–2025."
+          info={`${CAGR_EXPLANATION} Dieser Wert schreibt den Heimlade-Strompreis pro Jahr fort; vorbelegt aus der historischen BDEW-Preisentwicklung.`}
         />
         <NumberField
           label="Band ± (Best/Worst)"

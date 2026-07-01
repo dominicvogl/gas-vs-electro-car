@@ -6,7 +6,8 @@ import { calculate } from "@/lib/engine";
 import { priceData } from "@/lib/prices";
 import { buildDefaultState } from "@/lib/defaults";
 import { clearState, loadState, saveState } from "@/lib/storage";
-import { DieselPanel, ElectricPanel } from "@/components/InputPanel";
+import { fuelLabel } from "@/lib/labels";
+import { CombustionPanel, ElectricPanel } from "@/components/InputPanel";
 import { ForecastControls } from "@/components/ForecastControls";
 import { CostChart } from "@/components/CostChart";
 import { ResultCards } from "@/components/ResultCards";
@@ -31,6 +32,7 @@ export default function Home() {
   }, [state, loaded]);
 
   const result = useMemo(() => calculate(state, priceData), [state]);
+  const combustionLabel = fuelLabel(state.diesel.fuelType);
 
   const handleReset = () => {
     clearState();
@@ -45,13 +47,14 @@ export default function Home() {
             TCO-Prüfstand · Deutschland 2026
           </p>
           <h1 className="mt-1 font-display text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
-            Diesel behalten <span className="text-ink-soft">vs.</span>{" "}
+            {combustionLabel} behalten <span className="text-ink-soft">vs.</span>{" "}
             E-Auto neu
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-ink-soft">
-            Bestehenden Diesel weiterfahren oder verkaufen und elektrisch
-            neu kaufen? Der Diesel startet bei 0 €, der Verkaufserlös senkt die
-            E-Startkurve. Alle Werte sind editierbar und bleiben lokal gespeichert.
+            Bestehendes Fahrzeug weiterfahren oder verkaufen und elektrisch neu
+            kaufen? Das Bestandsfahrzeug startet bei 0 €, der Verkaufserlös senkt
+            die E-Startkurve. Alle Werte sind editierbar und bleiben lokal
+            gespeichert.
           </p>
         </div>
         <button
@@ -64,7 +67,7 @@ export default function Home() {
       </header>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <DieselPanel
+        <CombustionPanel
           value={state.diesel}
           onChange={(diesel) => setState((s) => ({ ...s, diesel }))}
         />
@@ -82,11 +85,15 @@ export default function Home() {
       </div>
 
       <div className="mt-4">
-        <CostChart result={result} />
+        <CostChart result={result} combustionLabel={combustionLabel} />
       </div>
 
       <div className="mt-4">
-        <ResultCards result={result} horizonYears={state.forecast.horizonYears} />
+        <ResultCards
+          result={result}
+          horizonYears={state.forecast.horizonYears}
+          combustionLabel={combustionLabel}
+        />
       </div>
 
       <footer className="mt-8 border-t border-hairline pt-4 text-xs text-ink-soft">

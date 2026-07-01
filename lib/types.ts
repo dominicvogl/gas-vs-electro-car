@@ -20,11 +20,20 @@ export interface CombustionVehicle {
   endResidualValue?: number; // optional: Restwert am Ende der Betrachtung (EUR)
 }
 
-// Finanzierung des E-Autos (optional statt Barkauf)
+// Erwerbsart des E-Autos.
+export type AcquisitionMode = "cash" | "financing" | "leasing";
+
+// Finanzierung des E-Autos (Kauf auf Raten, Eigentum verbleibt beim Halter)
 export interface Financing {
   monthlyRate: number; // EUR/Monat
   termMonths: number; // Laufzeit in Monaten
   downPayment: number; // Anzahlung EUR
+}
+
+// Leasing des E-Autos (Nutzung ohne Eigentum, Rückgabe am Ende, kein Restwert)
+export interface Leasing {
+  monthlyRate: number; // EUR/Monat (läuft über die gesamte Betrachtungsdauer)
+  downPayment: number; // Sonderzahlung / Anzahlung EUR
 }
 
 // Lade-Mix des E-Autos
@@ -36,16 +45,17 @@ export interface ChargingMix {
 
 // Neues E-Auto
 export interface ElectricVehicle {
-  purchasePrice: number; // Kaufpreis (EUR)
+  purchasePrice: number; // Kaufpreis (EUR) – bei Leasing nicht verwendet
   purchaseSubsidy: number; // Kaufprämie, EUR (Default 0)
-  useFinancing: boolean; // true → Finanzierung statt Einmalkauf
-  financing: Financing; // wird nur genutzt, wenn useFinancing = true
+  acquisitionMode: AcquisitionMode; // Barkauf / Finanzierung / Leasing
+  financing: Financing; // genutzt bei acquisitionMode = "financing"
+  leasing: Leasing; // genutzt bei acquisitionMode = "leasing"
   consumptionPer100km: number; // kWh/100km
   charging: ChargingMix;
   thgPerYear: number; // THG-Prämie / Jahr (EUR)
   taxFreeUntilYear: number; // Kalenderjahr, bis einschließlich dem Kfz-Steuer 0 ist (z. B. 2035)
   running: RunningCosts; // tax greift erst nach taxFreeUntilYear
-  endResidualValue?: number; // optional: Restwert am Ende (EUR)
+  endResidualValue?: number; // optional: Restwert am Ende (EUR); bei Leasing ohne Wirkung
 }
 
 // Prognose-/Szenario-Einstellungen
@@ -129,7 +139,8 @@ export interface YearlyResult {
 
 export interface CalcResult {
   years: YearlyResult[];
-  breakEvenYear: number | null; // erstes ganzes Jahr, in dem evCumulative <= dieselCumulative
+  startInvestment: number; // Netto-Umstiegsinvestition (E-Startpunkt bei t = 0)
+  breakEvenYear: number | null; // erstes ganzes Jahr, in dem E nachhaltig vorn liegt (0 = von Beginn an)
   breakEvenYearExact: number | null; // linear interpolierter Break-even (Jahre, z. B. 8,4)
   breakEvenKm: number | null;
   dieselCostPerKm: number; // am Ende des Horizonts

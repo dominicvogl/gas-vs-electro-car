@@ -7,6 +7,44 @@ function parseNum(text: string): number {
   return Number(text.replace(/\s/g, "").replace(",", "."));
 }
 
+// Info-Tooltip: kleines "i", zeigt Erklärtext bei Hover oder Fokus (tastaturfähig).
+export function InfoTip({ text }: { text: string }) {
+  return (
+    <span className="group relative inline-flex align-middle">
+      <button
+        type="button"
+        aria-label={`Info: ${text}`}
+        className="flex h-4 w-4 items-center justify-center rounded-full border border-hairline bg-panel text-[10px] font-semibold leading-none text-ink-soft hover:border-ev hover:text-ev"
+      >
+        i
+      </button>
+      <span
+        role="tooltip"
+        className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-1.5 w-56 -translate-x-1/2 rounded-md border border-hairline bg-panel-raised p-2.5 text-[11px] leading-snug text-ink opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100"
+      >
+        {text}
+      </span>
+    </span>
+  );
+}
+
+interface FieldLabelProps {
+  htmlFor?: string;
+  children: React.ReactNode;
+  info?: string;
+}
+
+function FieldLabel({ htmlFor, children, info }: FieldLabelProps) {
+  return (
+    <span className="flex items-center gap-1.5">
+      <label htmlFor={htmlFor} className="text-xs font-medium text-ink-soft">
+        {children}
+      </label>
+      {info ? <InfoTip text={info} /> : null}
+    </span>
+  );
+}
+
 interface NumberFieldProps {
   label: string;
   value: number;
@@ -16,6 +54,8 @@ interface NumberFieldProps {
   min?: number;
   max?: number;
   hint?: string;
+  info?: string;
+  disabled?: boolean;
 }
 
 // Zahlenfeld mit lokalem Text-Puffer: erlaubt Zwischenzustände ("6,", "") beim Tippen.
@@ -28,6 +68,8 @@ export function NumberField({
   min,
   max,
   hint,
+  info,
+  disabled = false,
 }: NumberFieldProps) {
   const id = useId();
   const [text, setText] = useState(String(value));
@@ -57,11 +99,15 @@ export function NumberField({
   };
 
   return (
-    <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-xs font-medium text-ink-soft">
+    <div className={`flex flex-col gap-1 ${disabled ? "opacity-50" : ""}`}>
+      <FieldLabel htmlFor={id} info={info}>
         {label}
-      </label>
-      <div className="flex items-stretch overflow-hidden rounded-md border border-hairline bg-panel-raised focus-within:border-ev">
+      </FieldLabel>
+      <div
+        className={`flex items-stretch overflow-hidden rounded-md border border-hairline ${
+          disabled ? "bg-panel" : "bg-panel-raised focus-within:border-ev"
+        }`}
+      >
         <input
           id={id}
           type="text"
@@ -70,9 +116,10 @@ export function NumberField({
           min={min}
           max={max}
           value={text}
+          disabled={disabled}
           onChange={(e) => handleChange(e.target.value)}
           onBlur={handleBlur}
-          className="tnum w-full bg-transparent px-3 py-2 font-mono text-sm text-ink outline-none"
+          className="tnum w-full bg-transparent px-3 py-2 font-mono text-sm text-ink outline-none disabled:cursor-not-allowed"
         />
         {unit ? (
           <span className="flex select-none items-center border-l border-hairline bg-panel px-2.5 text-xs text-ink-soft">
@@ -164,6 +211,51 @@ export function SelectField<T extends string>({
   );
 }
 
+interface SegmentedControlProps<T extends string> {
+  label: string;
+  value: T;
+  onChange: (v: T) => void;
+  options: Array<{ value: T; label: string }>;
+}
+
+// Segmentierter Umschalter für einen primären Modus (z. B. Erwerbsart).
+export function SegmentedControl<T extends string>({
+  label,
+  value,
+  onChange,
+  options,
+}: SegmentedControlProps<T>) {
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="text-xs font-medium text-ink-soft">{label}</span>
+      <div
+        role="group"
+        aria-label={label}
+        className="inline-flex rounded-md border border-hairline bg-panel p-0.5"
+      >
+        {options.map((o) => {
+          const active = o.value === value;
+          return (
+            <button
+              key={o.value}
+              type="button"
+              aria-pressed={active}
+              onClick={() => onChange(o.value)}
+              className={`flex-1 rounded px-3 py-1.5 text-sm transition-colors ${
+                active
+                  ? "bg-panel-raised font-medium text-ink shadow-sm"
+                  : "text-ink-soft hover:text-ink"
+              }`}
+            >
+              {o.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 interface ToggleFieldProps {
   label: string;
   checked: boolean;
@@ -201,14 +293,16 @@ export function ToggleField({ label, checked, onChange, hint }: ToggleFieldProps
   );
 }
 
-// Karten-Sektion mit Titel und optionalem Akzentbalken (Diesel/E-Farbe).
+// Karten-Sektion mit Titel, optionalem Akzentbalken (Diesel/E-Farbe) und Badge.
 export function Panel({
   title,
   accent,
+  badge,
   children,
 }: {
   title: string;
   accent?: "diesel" | "ev";
+  badge?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const bar =
@@ -224,6 +318,7 @@ export function Panel({
         <h2 className="font-display text-sm font-semibold uppercase tracking-wide text-ink">
           {title}
         </h2>
+        {badge ? <span className="ml-auto">{badge}</span> : null}
       </div>
       {children}
     </section>
