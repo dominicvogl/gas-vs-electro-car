@@ -3,15 +3,12 @@
 # dependencies
 /node_modules
 /.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+.pnp.js
+.yarn/install-state.gz
 
 # testing
 /coverage
+.claude/
 
 # next.js
 /.next/
@@ -19,19 +16,31 @@
 
 # production
 /build
+/data/
+dump/
+plans/
+import/
 
 # misc
 .DS_Store
 *.pem
 
+# editor
+.idea/
+.vscode/
+.junie/
+.claude/plans/
+
 # debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# local env files
+.env*.local
+
+# vendored assets (copied from node_modules via next.config.mjs)
+/public/vendor/
 
 # vercel
 .vercel
@@ -39,3 +48,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local variables
+.env.local
+.env
+GO-LIVE-CHECKLISTE.md
+
+certificates
